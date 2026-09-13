@@ -1,36 +1,42 @@
 # 소셜 투표 서비스 데이터 파이프라인
 
+🔗 [Vercel 앱 바로가기](https://ping-v2-lac.vercel.app/) | [파이프라인 다이어그램](https://claude.ai/code/artifact/958167e6-cd4d-4cbd-a452-f6edd772e431) | [데이터 대시보드](https://datastudio.google.com/u/0/reporting/56421d8f-e6cc-4303-8e86-76b5d31cb55c/page/p_bc34jacl6d/edit)
+
 ## 개요
-- 문제: 가입자의 63.9%가 가입 후 일주일 이내 활동 중단
-- 데이터 한계: 투표 관련 데이터는 마스킹되지 않은 10개 학교(전체 가입자의 0.75%)에서만 확인 가능
-- 선택: 원인 규명보다 **데이터 구조·파이프라인 기반 구축 우선**
-- 기간: 2026.07.23 ~ 2026.08.27
-- 원본 데이터 기간: 2023.03 ~ 2024.05
 
-## 발견한 구조적 문제
-1. 투표 데이터는 확인 가능한 10개 학교를 중심으로만 파악할 수 있었음 (나머지 학교는 마스킹)
-2. 확인 가능한 10개 학교와 결제·매출은 직접 연결되지 않음 (결제유저의 99.31%가 다른 학교에 존재)
-3. 투표 완료율은 96.3%로 높았지만, 결과 확인 후 힌트 사용까지 이어진 비율은 16.5%에 그침
+* 목표: 사용자 이탈 원인 분석을 위한 데이터 구조 및 파이프라인 구축
+* 기간: 2026.07.23 ~ 2026.08.27
+* 데이터: 2023.03 ~ 2024.05
+* 문제: 가입자의 63.9%가 가입 후 일주일 이내 활동 중단
+* 데이터 한계: 투표 데이터가 10개 학교에만 존재하여 이탈 원인 분석에 제약
 
-## 파이프라인 설계 (v2)
-실제 데이터(Supabase)와 합성 데이터(generate.py)를 `_source`/`_loaded_at` 기준으로 구분해 같은 구조로 적재하고, Raw → Staging → Mart로 단계화했다.
-- Raw: 실제·합성 데이터를 원본 그대로 적재 (증분 적재)
-- Staging: 반복 사용되는 조인·판단 기준 정리 (View 10개)
-- Mart: 대시보드용 집계 테이블 (8개)
-- Airflow 2개 DAG(`ping_raw_load`, `ping_mart_build`)로 적재부터 Mart 생성까지 자동화
+## 분석 과정
 
-## 다음 단계
-- 실제 데이터 누적 후 세그먼트별 행동 차이 비교
-- v1에서 확인하기 어려웠던 이탈 원인 가설을 실제 데이터로 검증
+1. 레거시 서비스 데이터 구조 및 이탈 현황 분석
+2. Raw → Staging → Mart 데이터 구조 설계
+3. Airflow 기반 데이터 적재 및 집계 자동화
+
+## 주요 결과
+
+* 실제·합성 데이터를 동일한 구조로 관리하고 `_source`, `_loaded_at`으로 데이터 구분
+* Raw 원천 데이터 적재 → Staging View 10개 → Mart 집계 테이블 8개로 데이터 계층화
+* Airflow 2개 DAG으로 Raw 적재부터 Mart 생성까지 자동화
 
 ## 사용 기술
-- BigQuery, Airflow, Python, PostgreSQL, Supabase, Looker Studio
+
+* BigQuery, Airflow, Python, PostgreSQL, Supabase, Looker Studio
 
 ## 프로젝트 구조
-```
+
+```text
 .
+
+├── docs/
+│   ├── 0. 프로젝트 일정.pdf
+│   ├── 1. 익명 투표 SNS 서비스 운영 데이터 분석 보고서.pdf
+│   └── 2. 데이터 파이프라인 설계 및 구축.pdf
 ├── notebooks/
-│   ├── 01_problem_definition.md
-│   └── 02_pipeline_design.md
+│   └── 01_v2_eda.ipynb
 └── output/
+    └── pipeline_diagram_v2.png
 ```
